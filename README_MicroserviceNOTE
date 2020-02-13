@@ -1,0 +1,207 @@
+Creating Microservices Application
+========================================================================================================================================
+
+Step 1 : Create Microservice-CallDetails
+Step 2 : Create Microservice-PlanDetails
+Step 3 : Create Microservice-Friend
+Step 4 : Create Microservice-Customer
+
+Step 5 : Create a UI Application (UI appln can be developed in Angular8 or JSP or SPringMVC RestTemplate)   
+         Microservice-UIApp
+
+                                       	      GIT 
+                                     =====================
+
+Step 6 : SIGN UP for new GIT account if not exists  or sign in the existing GIT account
+
+         Click New -> Microservice     
+
+           Create new file ===  application.properties in git hub and 
+
+    Place the common properties from the above 4 MICROSERVICES application.properties files in the newly created application.properties file in GIT HUb
+
+application.properties
+------------------------
+spring.datasource.driver-class-name: com.mysql.cj.jdbc.Driver
+	spring.datasource.password: 123456
+	spring.datasource.username: root
+	spring.jpa.hibernate.ddl-auto: update
+	spring.jpa.show-sql: true
+
+
+					    CONFIG SERVER
+                                     =============================
+
+
+Step 7 : Create new project """""Cloud-Config-Server"""" 
+                                -----------------------
+                         
+         Add the Dependencies (Spring Web, Cloud Bootstrap, (DevTools))
+         ---------------------
+         Spring Web, Spring Cloud (Select --- """"Cloud Bootstrap"""") ,  (DevTools is optional)
+
+         Change the <artifactId>spring-cloud-starter</artifactId> TO 
+ 
+         <artifactId>spring-cloud-config-server</artifactId>
+         ----------------------------------------------------
+      
+Step 8 : OPEN The application.properties file
+     
+         server.port =1111
+
+	#The below GIT URL is to load the properties from GIT HUB
+	spring.cloud.config.server.git.uri=https://github.com/kalyanibhupathi/Microservice.git
+ 
+Step 9 : Go to === CloudConfigServerApplication.java .... main file
+         
+          Add the below annotation
+
+         @EnableConfigServer
+
+Step 10 : Run the server and check the below url , whether we are getting the updated properties file or not
+
+         http://localhost:1111/application-default.properties
+output:  
+        spring.datasource.driver-class-name: com.mysql.cj.jdbc.Driver
+	spring.datasource.password: 123456
+	spring.datasource.username: root
+	spring.jpa.hibernate.ddl-auto: update
+	spring.jpa.show-sql: true
+
+These propeties we got from the git hub . the git hub url is integrated in properties file of this application . Check in STEP 8
+
+
+
+ 
+=========================================================================================================================================
+Step-1
+--------
+First create Microservice-CallDetails (RestFul Webservice)
+---------------------------------------------------------------
+
+Create a Database -- calldetails
+
+Create a new project Microservice-CallDetails 
+
+Add the Dependencies 
+--------------------
+Add the dependencies ======= spring-jpa ,  spring-web, mysql driver, DevTools 
+
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+<dependency>
+  <groupId>mysql</groupId>
+  <artifactId>mysql-connector-java</artifactId>
+  <scope>runtime</scope>
+</dependency>
+
+
+Properties File
+-----------------------
+server.port=5555
+#context path is used to call the all end points
+server.servlet.context-path=/CallDetailsApi
+
+#DataSource properties
+#spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url = jdbc:mysql://localhost:3306/calldetails
+#spring.datasource.username=root
+#spring.datasource.password=123456
+
+#JPA properties
+#spring.jpa.show-sql = true
+#spring.jpa.hibernate.ddl-auto= update
+
+-------------------------------------------------------------------------------------- 
+=> Create an Entity class, create DTO class
+
+      @Entity
+
+
+
+=> Create a Repository interface by extending JPARepository interface
+	
+       @Repository
+       public interface CallDetailsRepository extends JpaRepository<CallDetails, Long> {
+		List <CallDetails> findByCalledBy(Long calledBy);
+       }
+
+
+
+=> Create a service interface ex: ICallDetailsService interface
+
+	List<CallDetailsDTO> getCallDetailsByPhoneNumber(Long calledBy);
+
+
+=> Create a service implementation Class ex: CallDetailsServiceImpl class 
+ 
+     @Service
+     public class CallDetailsServiceImpl implements ICallDetailsService {
+				
+	@Autowired
+	CallDetailsRepository calldetailsRepo;
+	
+	@Override
+	public List<CallDetailsDTO> getCallDetailsByPhoneNumber(Long calledBy) {
+		
+		List <CallDetails> callDetailsList =  calldetailsRepo.findByCalledBy(calledBy);
+		
+		List <CallDetailsDTO> callDListDTOList = new ArrayList<>();
+		
+		for(CallDetails callDetails:callDetailsList) {
+			CallDetailsDTO dto = new CallDetailsDTO();
+			BeanUtils.copyProperties(callDetails, dto);
+			callDListDTOList.add(dto);
+			
+		}
+		return callDListDTOList;
+	}
+     }
+
+
+=>  Create RestController
+
+    @RestController
+    public class CallDetailsController {
+			
+	@Autowired
+	ICallDetailsService callDetailsService;
+	
+	@GetMapping("/{phoneNumber}")
+	public List<CallDetailsDTO> getCallDetailsByPhNo(@PathVariable(value="phoneNumber") Long calledBy){
+		return callDetailsService.getCallDetailsByPhoneNumber(calledBy);
+	}
+	
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
